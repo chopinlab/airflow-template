@@ -1,0 +1,416 @@
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from airflow.datasets import Dataset
+import os
+import json
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset as TorchDataset, DataLoader
+import numpy as np
+from sklearn.metrics import accuracy_score
+import mlflow
+import mlflow.pytorch
+
+# Dataset 정의
+training_data_dataset = Dataset("file:///opt/airflow/data/train/")
+model_dataset = Dataset("file:///opt/airflow/models/simple_classifier.pth")
+inference_results_dataset = Dataset("file:///opt/airflow/data/inference_results.json")
+
+default_args = {
+    'owner': 'ml-team',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'simple_image_classifier',
+    default_args=default_args,
+    description='Simple RGB image classifier with pre-generated data',
+    schedule=timedelta(hours=12),
+    catchup=False,
+    tags=['pytorch', 'rgb-images', 'simple'],
+)
+
+class SimpleRGBDataset(TorchDataset):
+    """RGB 바이너리 파일용 데이터셋"""
+    
+    def __init__(self, data_path, labels_dict):
+        self.data_path = data_path
+        self.labels_dict = labels_dict
+        self.class_to_idx = {'cat': 0, 'dog': 1}
+        
+    def __len__(self):
+        return len(self.labels_dict)
+    
+    def __getitem__(self, idx):
+        filenames = list(self.labels_dict.keys())
+        filename = filenames[idx]
+        
+        # RGB 파일 로드
+        img_path = os.path.join(self.data_path, filename)
+        
+        with open(img_path, 'rb') as f:
+            # 헤더 읽기 (width, height)
+            width = int.from_bytes(f.read(4), 'little')
+            height = int.from_bytes(f.read(4), 'little')
+            
+            # 픽셀 데이터 읽기
+            pixel_data = f.read(width * height * 3)
+            
+        # numpy 배열로 변환
+        image_array = np.frombuffer(pixel_data, dtype=np.uint8)
+        image_array = image_array.reshape((height, width, 3))
+        
+        # 정규화 및 텐서 변환
+        image = image_array.astype(np.float32) / 255.0
+        image = torch.from_numpy(image).permute(2, 0, 1)  # CHW 형식으로
+        
+        # 레이블
+        label_name = self.labels_dict[filename]
+        label = self.class_to_idx[label_name]
+        
+        return image, label
+
+class SimpleCNN(nn.Module):
+    """간단한 CNN 모델"""
+    
+    def __init__(self, num_classes=2):
+        super(SimpleCNN, self).__init__()
+        
+        # 입력: 3x64x64
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.pool1 = nn.MaxPool2d(2, 2)
+        
+        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
+        self.pool2 = nn.MaxPool2d(2, 2)
+        
+        self.conv3 = nn.Conv2d(32, 64, 3, padding=1)
+        self.pool3 = nn.MaxPool2d(2, 2)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(64 * 8 * 8, 128)
+        self.dropout = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(128, num_classes)
+        
+    def forward(self, x):
+        x = self.pool1(F.relu(self.conv1(x)))
+        x = self.pool2(F.relu(self.conv2(x)))
+        x = self.pool3(F.relu(self.conv3(x)))
+        
+        x = x.view(-1, 64 * 8 * 8)
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        
+        return x
+
+def verify_data_exists(**context):
+    """데이터 존재 확인"""
+    
+    labels_file = '/opt/airflow/data/labels_rgb.json'
+    
+    if not os.path.exists(labels_file):
+        print("❌ RGB labels file not found!")
+        print("💡 Running image generation first...")
+        
+        # 이미지 생성 스크립트 실행
+        import subprocess
+        result = subprocess.run([
+            'python', '/opt/airflow/data/create_minimal_images.py'
+        ], capture_output=True, text=True, cwd='/opt/airflow')
+        
+        if result.returncode == 0:
+            print("✅ Images generated successfully")
+            print(result.stdout)
+        else:
+            print("❌ Error generating images")
+            print(result.stderr)
+            raise Exception("Image generation failed")
+    
+    # 데이터 확인
+    with open(labels_file, 'r') as f:
+        labels = json.load(f)
+    
+    for split in ['train', 'val', 'test']:
+        data_path = f'/opt/airflow/data/{split}/images'
+        if split in labels:
+            count = len(labels[split])
+            print(f"📁 {split.upper()}: {count} images in {data_path}")
+    
+    print("✅ All data verified successfully!")
+    return labels_file
+
+def train_simple_model(**context):
+    """간단한 모델 훈련"""
+    print("🚀 Starting simple model training...")
+    
+    # MLflow 설정
+    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_experiment("simple_rgb_classification")
+    
+    with mlflow.start_run(run_name=f"simple_training_{context['ds']}") as run:
+        
+        # 레이블 파일 로드
+        with open('/opt/airflow/data/labels_rgb.json', 'r') as f:
+            labels = json.load(f)
+        
+        # 데이터셋 생성
+        train_dataset = SimpleRGBDataset(
+            '/opt/airflow/data/train/images',
+            labels['train']
+        )
+        
+        val_dataset = SimpleRGBDataset(
+            '/opt/airflow/data/val/images',
+            labels['val']
+        )
+        
+        # 데이터 로더
+        train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False)
+        
+        # 모델 초기화
+        model = SimpleCNN(num_classes=2)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        
+        # 하이퍼파라미터 로깅
+        mlflow.log_params({
+            'batch_size': 2,
+            'learning_rate': 0.001,
+            'epochs': 5,
+            'model_type': 'SimpleCNN',
+            'data_format': 'RGB_binary'
+        })
+        
+        print(f"📊 Training samples: {len(train_dataset)}")
+        print(f"📊 Validation samples: {len(val_dataset)}")
+        
+        # 훈련 루프
+        model.train()
+        for epoch in range(5):  # 빠른 훈련을 위해 5 에포크
+            running_loss = 0.0
+            correct = 0
+            total = 0
+            
+            for batch_idx, (images, labels_batch) in enumerate(train_loader):
+                optimizer.zero_grad()
+                
+                outputs = model(images)
+                loss = criterion(outputs, labels_batch)
+                loss.backward()
+                optimizer.step()
+                
+                running_loss += loss.item()
+                
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels_batch.size(0)
+                correct += (predicted == labels_batch).sum().item()
+            
+            epoch_loss = running_loss / len(train_loader)
+            epoch_acc = correct / total
+            
+            print(f"Epoch {epoch+1}/5 - Loss: {epoch_loss:.4f}, Acc: {epoch_acc:.4f}")
+            
+            mlflow.log_metrics({
+                'train_loss': epoch_loss,
+                'train_accuracy': epoch_acc
+            }, step=epoch)
+        
+        # 검증
+        model.eval()
+        val_loss = 0.0
+        val_correct = 0
+        val_total = 0
+        
+        with torch.no_grad():
+            for images, labels_batch in val_loader:
+                outputs = model(images)
+                loss = criterion(outputs, labels_batch)
+                val_loss += loss.item()
+                
+                _, predicted = torch.max(outputs, 1)
+                val_total += labels_batch.size(0)
+                val_correct += (predicted == labels_batch).sum().item()
+        
+        val_accuracy = val_correct / val_total
+        val_loss = val_loss / len(val_loader)
+        
+        print(f"🎯 Validation - Loss: {val_loss:.4f}, Accuracy: {val_accuracy:.4f}")
+        
+        mlflow.log_metrics({
+            'val_loss': val_loss,
+            'val_accuracy': val_accuracy
+        })
+        
+        # 모델 저장
+        model_path = '/opt/airflow/models/simple_classifier.pth'
+        os.makedirs('/opt/airflow/models', exist_ok=True)
+        
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'model_class': 'SimpleCNN',
+            'val_accuracy': val_accuracy,
+            'class_to_idx': {'cat': 0, 'dog': 1}
+        }, model_path)
+        
+        print(f"💾 Model saved: {model_path}")
+        
+        # MLflow에 모델 등록
+        mlflow.pytorch.log_model(model, "model", registered_model_name="SimpleRGBClassifier")
+        
+        context['ti'].xcom_push(key='model_path', value=model_path)
+        context['ti'].xcom_push(key='val_accuracy', value=val_accuracy)
+        
+        return {
+            'model_path': model_path,
+            'val_accuracy': val_accuracy,
+            'run_id': run.info.run_id
+        }
+
+def run_simple_inference(**context):
+    """간단한 추론 실행"""
+    print("🔮 Running simple inference...")
+    
+    model_path = context['ti'].xcom_pull(task_ids='train_simple_model', key='model_path')
+    
+    # 모델 로드
+    checkpoint = torch.load(model_path, map_location='cpu')
+    model = SimpleCNN(num_classes=2)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    
+    # 레이블 파일 로드
+    with open('/opt/airflow/data/labels_rgb.json', 'r') as f:
+        labels = json.load(f)
+    
+    # 테스트 데이터셋
+    test_dataset = SimpleRGBDataset(
+        '/opt/airflow/data/test/images',
+        labels['test']
+    )
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    
+    idx_to_class = {0: 'cat', 1: 'dog'}
+    predictions = []
+    
+    print("🎯 Running inference...")
+    
+    with torch.no_grad():
+        for i, (images, true_labels) in enumerate(test_loader):
+            outputs = model(images)
+            probabilities = F.softmax(outputs, dim=1)
+            _, predicted = torch.max(outputs, 1)
+            
+            pred_class = idx_to_class[predicted.item()]
+            true_class = idx_to_class[true_labels.item()]
+            confidence = probabilities[0][predicted].item()
+            
+            result = {
+                'sample': i + 1,
+                'predicted': pred_class,
+                'true': true_class,
+                'confidence': confidence,
+                'correct': pred_class == true_class
+            }
+            
+            predictions.append(result)
+            status = "✅" if result['correct'] else "❌"
+            print(f"  Sample {i+1}: {pred_class} (conf: {confidence:.3f}) | True: {true_class} {status}")
+    
+    # 정확도 계산
+    correct_count = sum(1 for p in predictions if p['correct'])
+    test_accuracy = correct_count / len(predictions)
+    
+    # 결과 저장
+    results = {
+        'test_accuracy': test_accuracy,
+        'total_samples': len(predictions),
+        'correct_predictions': correct_count,
+        'predictions': predictions,
+        'timestamp': context['ds'],
+        'model_path': model_path
+    }
+    
+    results_path = '/opt/airflow/data/inference_results.json'
+    with open(results_path, 'w') as f:
+        json.dump(results, f, indent=2)
+    
+    print(f"📊 Test Accuracy: {test_accuracy:.4f} ({correct_count}/{len(predictions)})")
+    print(f"📁 Results saved: {results_path}")
+    
+    context['ti'].xcom_push(key='test_accuracy', value=test_accuracy)
+    
+    return results
+
+def generate_final_report(**context):
+    """최종 보고서 생성"""
+    print("📈 Generating final report...")
+    
+    val_accuracy = context['ti'].xcom_pull(task_ids='train_simple_model', key='val_accuracy')
+    test_accuracy = context['ti'].xcom_pull(task_ids='run_simple_inference', key='test_accuracy')
+    
+    print("\n" + "="*60)
+    print("🎯 SIMPLE RGB IMAGE CLASSIFIER REPORT")
+    print("="*60)
+    print(f"📊 Validation Accuracy: {val_accuracy:.4f}")
+    print(f"🎯 Test Accuracy: {test_accuracy:.4f}")
+    print(f"📉 Overfitting Gap: {abs(val_accuracy - test_accuracy):.4f}")
+    
+    if test_accuracy > 0.5:  # 랜덤보다 좋으면
+        if test_accuracy > 0.8:
+            status = "🎉 EXCELLENT"
+        elif test_accuracy > 0.6:
+            status = "👍 GOOD"
+        else:
+            status = "✅ ACCEPTABLE"
+    else:
+        status = "⚠️  POOR (worse than random)"
+    
+    print(f"🏆 Performance: {status}")
+    print(f"📁 Model saved: /opt/airflow/models/simple_classifier.pth")
+    print(f"📁 Results saved: /opt/airflow/data/inference_results.json")
+    print("="*60)
+    
+    return {
+        'val_accuracy': val_accuracy,
+        'test_accuracy': test_accuracy,
+        'status': status
+    }
+
+# Task 정의
+verify_task = PythonOperator(
+    task_id='verify_data_exists',
+    python_callable=verify_data_exists,
+    dag=dag
+)
+
+train_task = PythonOperator(
+    task_id='train_simple_model',
+    python_callable=train_simple_model,
+    dag=dag,
+    outlets=[model_dataset]
+)
+
+inference_task = PythonOperator(
+    task_id='run_simple_inference',
+    python_callable=run_simple_inference,
+    dag=dag,
+    outlets=[inference_results_dataset]
+)
+
+report_task = PythonOperator(
+    task_id='generate_final_report',
+    python_callable=generate_final_report,
+    dag=dag
+)
+
+# Task 의존성
+verify_task >> train_task >> inference_task >> report_task

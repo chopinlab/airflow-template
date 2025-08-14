@@ -1,0 +1,28 @@
+{
+  "classes": [
+    "cat",
+    "dog"
+  ],
+  "train": {
+    "cat_001.rgb": "cat",
+    "cat_002.rgb": "cat",
+    "cat_003.rgb": "cat",
+    "cat_004.rgb": "cat",
+    "cat_005.rgb": "cat",
+    "dog_001.rgb": "dog",
+    "dog_002.rgb": "dog",
+    "dog_003.rgb": "dog",
+    "dog_004.rgb": "dog",
+    "dog_005.rgb": "dog"
+  },
+  "val": {
+    "cat_val_001.rgb": "cat",
+    "cat_val_002.rgb": "cat",
+    "dog_val_001.rgb": "dog",
+    "dog_val_002.rgb": "dog"
+  },
+  "test": {
+    "cat_test_001.rgb": "cat",
+    "dog_test_001.rgb": "dog"
+  }
+}
