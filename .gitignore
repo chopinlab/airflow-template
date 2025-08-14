@@ -63,6 +63,7 @@ models/trained/
 # MLflow artifacts
 mlruns/
 mlartifacts/
+mlflow/
 
 # Temporary files
 *.tmp

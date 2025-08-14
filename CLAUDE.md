@@ -41,14 +41,14 @@ The repository is in its initial state with no commits yet and minimal file stru
    docker-compose up
    ```
 
-4. **Access Airflow**:
-   - Web UI: http://localhost:8080
-   - Default credentials: admin/admin
+4. **Access Services**:
+   - Airflow Web UI: http://localhost:8080 (admin/admin)
+   - MLflow Web UI: http://localhost:5000
 
 ### Common Commands
 
 ```bash
-# Start services
+# Start services (includes MLflow)
 docker-compose up
 
 # Start in background
@@ -62,13 +62,47 @@ docker-compose logs -f
 
 # Execute airflow commands
 docker-compose exec airflow airflow --help
+
+# View MLflow logs
+docker-compose logs -f mlflow
 ```
 
 ### Directory Structure
 - `dags/` - Put your DAG files here
 - `logs/` - Airflow execution logs
 - `plugins/` - Custom plugins
-- `config/` - Configuration files
+- `configs/` - Configuration files
+- `models/` - Trained ML models
+- `data/` - Raw and processed datasets
+- `artifacts/` - MLflow artifacts and outputs
+- `mlflow/` - MLflow tracking data
+- `notebooks/` - Jupyter notebooks
+- `scripts/` - Reusable Python scripts
+- `sql/` - SQL queries
+
+### MLflow Integration
+
+The setup includes MLflow for experiment tracking and model management:
+
+**Services:**
+- **MLflow Server**: http://localhost:5000
+- **Backend Store**: PostgreSQL database
+- **Artifact Store**: Local filesystem (`./artifacts`)
+
+**Example Usage:**
+```python
+import mlflow
+mlflow.set_tracking_uri("http://mlflow:5000")
+
+with mlflow.start_run():
+    mlflow.log_param("param1", value)
+    mlflow.log_metric("metric1", value)
+    mlflow.sklearn.log_model(model, "model")
+```
+
+**Sample DAGs:**
+- `hello_world_dag.py` - Basic Airflow functionality
+- `mlflow_example_dag.py` - Complete ML pipeline with MLflow tracking
 
 ## Notes
 
