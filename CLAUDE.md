@@ -20,11 +20,55 @@ The repository is in its initial state with no commits yet and minimal file stru
 
 ## Development Setup
 
-Since this is a new Airflow template, typical development commands would need to be established as the project grows. Common Airflow project patterns include:
-- Virtual environment setup
-- Airflow installation and configuration
-- DAG development and testing
-- Local Airflow instance management
+### Prerequisites
+- Docker and Docker Compose installed
+- Basic understanding of Apache Airflow
+
+### Getting Started
+
+1. **Create required directories**:
+   ```bash
+   mkdir -p dags logs plugins config
+   ```
+
+2. **Set AIRFLOW_UID (Linux/WSL)**:
+   ```bash
+   echo -e "AIRFLOW_UID=$(id -u)" > .env
+   ```
+
+3. **Start Airflow**:
+   ```bash
+   docker-compose up
+   ```
+
+4. **Access Airflow**:
+   - Web UI: http://localhost:8080
+   - Default credentials: admin/admin
+
+### Common Commands
+
+```bash
+# Start services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Execute airflow commands
+docker-compose exec airflow airflow --help
+```
+
+### Directory Structure
+- `dags/` - Put your DAG files here
+- `logs/` - Airflow execution logs
+- `plugins/` - Custom plugins
+- `config/` - Configuration files
 
 ## Notes
 
