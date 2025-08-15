@@ -1,19 +1,12 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from airflow.datasets import Dataset
 import os
 import json
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-from torch.utils.data import Dataset as TorchDataset, DataLoader
-from PIL import Image
-import numpy as np
-from sklearn.metrics import accuracy_score, classification_report
 import mlflow
-import mlflow.pytorch
+import subprocess
 
 # Dataset 정의
 training_data_dataset = Dataset("file:///opt/airflow/data/train/")

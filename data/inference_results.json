@@ -1,0 +1,31 @@
+{
+  "summary": {
+    "total_images": 4,
+    "successful_predictions": 2
+  },
+  "predictions": {
+    "cat_test_001.jpg": {
+      "predicted_class": "cat",
+      "confidence": 0.7569486498832703,
+      "probabilities": {
+        "cat": 0.7569486498832703,
+        "dog": 0.24305132031440735
+      }
+    },
+    "dog_test_001.rgb": {
+      "error": "Unsupported BMP pixel depth (13684)"
+    },
+    "cat_test_001.rgb": {
+      "error": "Unsupported BMP pixel depth (31976)"
+    },
+    "dog_test_001.jpg": {
+      "predicted_class": "cat",
+      "confidence": 0.5037091970443726,
+      "probabilities": {
+        "cat": 0.5037091970443726,
+        "dog": 0.49629080295562744
+      }
+    }
+  },
+  "run_id": "c6374307b52a4ce5a36e24575ee88bcd"
+}

@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+# 시스템 패키지 설치
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python 패키지 설치 (버전 고정)
+RUN pip install --no-cache-dir \
+    mlflow==3.2.0 \
+    psycopg2-binary \
+    torch==2.1.0+cpu \
+    torchvision==0.16.0+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html \
+    Pillow \
+    numpy==1.24.4 \
+    scikit-learn \
+    fastapi \
+    uvicorn
+
+# 작업 디렉토리 설정
+WORKDIR /mlflow-projects/image-classification
+
+# 기본 명령어
+CMD ["tail", "-f", "/dev/null"]

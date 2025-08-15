@@ -44,6 +44,7 @@ The repository is in its initial state with no commits yet and minimal file stru
 4. **Access Services**:
    - Airflow Web UI: http://localhost:8080 (admin/admin)
    - MLflow Web UI: http://localhost:5000
+   - Model Serving API: http://localhost:5001
 
 ### Common Commands
 
@@ -82,12 +83,20 @@ docker-compose logs -f mlflow
 
 ### MLflow Integration
 
-The setup includes MLflow for experiment tracking and model management:
+The setup includes a complete MLOps pipeline with separated concerns:
 
 **Services:**
-- **MLflow Server**: http://localhost:5000
+- **MLflow Server**: http://localhost:5000 - Experiment tracking and model registry
+- **MLflow Training**: Background container for running training jobs
+- **MLflow Serving**: http://localhost:5001 - FastAPI model serving service
 - **Backend Store**: PostgreSQL database
 - **Artifact Store**: Local filesystem (`./artifacts`)
+
+**Architecture:**
+- **Airflow**: Orchestrates the ML pipeline workflow
+- **MLflow Training Container**: Executes actual model training and inference
+- **MLflow Serving Container**: Serves models via REST API
+- **MLflow Server**: Manages experiments, runs, and model registry
 
 **Example Usage:**
 ```python
@@ -102,7 +111,16 @@ with mlflow.start_run():
 
 **Sample DAGs:**
 - `hello_world_dag.py` - Basic Airflow functionality
-- `mlflow_example_dag.py` - Complete ML pipeline with MLflow tracking
+- `mlflow_orchestration_pipeline.py` - MLflow-based ML pipeline orchestration
+- `simple_image_classifier.py` - Simple image classification example
+
+**MLflow Projects:**
+- `mlflow-projects/image-classification/` - Complete image classification project
+  - `train.py` - Model training script
+  - `inference.py` - Model inference script
+  - `serve.py` - FastAPI model serving service
+  - `MLproject` - MLflow project configuration
+  - `conda.yaml` - Environment dependencies
 
 ## Notes
 

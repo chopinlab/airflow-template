@@ -152,7 +152,7 @@ def train_simple_model(**context):
     print("🚀 Starting simple model training...")
     
     # MLflow 설정
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     mlflow.set_experiment("simple_rgb_classification")
     
     with mlflow.start_run(run_name=f"simple_training_{context['ds']}") as run:

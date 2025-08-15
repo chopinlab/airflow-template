@@ -28,7 +28,7 @@ def create_experiment(**context):
     from mlflow.tracking import MlflowClient
     
     # Set MLflow tracking URI
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     
     client = MlflowClient()
     experiment_name = "airflow_simple_demo"
@@ -58,7 +58,7 @@ def train_and_log_model(**context):
     from sklearn.metrics import accuracy_score
     
     # Set MLflow tracking
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     mlflow.set_experiment("airflow_simple_demo")
     
     # Generate sample data
@@ -117,7 +117,7 @@ def list_experiments(**context):
     import mlflow
     from mlflow.tracking import MlflowClient
     
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     experiments = client.search_experiments()
@@ -133,7 +133,7 @@ def check_model_registry(**context):
     import mlflow
     from mlflow.tracking import MlflowClient
     
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     try:
@@ -164,7 +164,7 @@ def promote_model(**context):
     import mlflow
     from mlflow.tracking import MlflowClient
     
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     model_name = "SimpleAirflowModel"

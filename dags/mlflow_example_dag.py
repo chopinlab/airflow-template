@@ -59,7 +59,7 @@ def train_model(**context):
     print("Starting model training with MLflow...")
     
     # Set MLflow tracking URI (set in docker-compose)
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     
     # Set experiment
     experiment_name = "airflow_ml_pipeline"

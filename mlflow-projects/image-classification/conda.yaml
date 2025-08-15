@@ -1,0 +1,16 @@
+name: image-classification-env
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pytorch
+  - torchvision
+  - pillow
+  - numpy
+  - scikit-learn
+  - pip
+  - pip:
+    - mlflow
+    - psycopg2-binary

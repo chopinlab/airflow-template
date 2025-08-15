@@ -18,8 +18,8 @@ services:
       start_period: 5s
     restart: always
 
-  mlflow:
-    image: python:3.12-slim
+  mlflow-server:
+    image: python:3.11-slim
     ports:
       - "5000:5000"
     environment:
@@ -31,15 +31,37 @@ services:
     command: >
       bash -c "
         pip install mlflow psycopg2-binary &&
-        mlflow server 
-          --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
-          --default-artifact-root /mlflow/artifacts
-          --host 0.0.0.0
-          --port 5000
+        sleep 10 &&
+        mlflow server --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
       "
     depends_on:
       postgres:
         condition: service_healthy
+    restart: always
+
+  mlflow-training:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    image: mlflow-pytorch:latest
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+    volumes:
+      - ./mlflow-projects:/mlflow-projects
+      - ./data:/data
+      - ./artifacts:/mlflow/artifacts
+      - ./models:/models
+    working_dir: /mlflow-projects/image-classification
+    command: >
+      bash -c "
+        sleep 10 &&
+        python training_api.py
+      "
+    ports:
+      - "8000:8000"
+    depends_on:
+      mlflow-server:
+        condition: service_started
     restart: always
 
   airflow:
@@ -49,11 +71,11 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
-      - _PIP_ADDITIONAL_REQUIREMENTS=mlflow>=2.8.0 scikit-learn>=1.3.0 pandas>=2.0.0 airflow-provider-mlflow torch torchvision Pillow numpy
+      - _PIP_ADDITIONAL_REQUIREMENTS=mlflow>=2.8.0 requests>=2.28.0 bentoml
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin,mlops:user,viewer:viewer
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - AIRFLOW_CONN_MLFLOW_DEFAULT=http://mlflow:5000
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - AIRFLOW_CONN_MLFLOW_DEFAULT=http://mlflow-server:5000
       - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow@postgres:5432/airflow
     volumes:
       - ./dags:/opt/airflow/dags
@@ -73,11 +95,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mlflow:
+      mlflow-server:
         condition: service_started
     command: >
       bash -c "
-        pip install mlflow scikit-learn pandas great-expectations airflow-provider-mlflow torch torchvision Pillow &&
+        pip install mlflow requests airflow-provider-mlflow &&
         airflow db migrate &&
         python /opt/airflow/scripts/init-connections.py &&
         airflow standalone

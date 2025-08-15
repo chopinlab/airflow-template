@@ -26,7 +26,7 @@ dag = DAG(
 
 def list_all_models(**context):
     """모든 등록된 모델 조회"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     models = client.search_registered_models()
@@ -51,7 +51,7 @@ def list_all_models(**context):
 
 def validate_staging_models(**context):
     """Staging 상태 모델들 검증"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     models = client.search_registered_models()
@@ -96,7 +96,7 @@ def decide_promotion_action(**context):
 
 def promote_models_to_production(**context):
     """검증된 모델들을 Production으로 승격"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     validation_results = context['ti'].xcom_pull(task_ids='validate_staging_models', key='validation_results')
@@ -130,7 +130,7 @@ def promote_models_to_production(**context):
 
 def cleanup_old_model_versions(**context):
     """오래된 모델 버전 정리"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     models = client.search_registered_models()
@@ -156,7 +156,7 @@ def cleanup_old_model_versions(**context):
 
 def generate_model_report(**context):
     """모델 현황 보고서 생성"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     models = client.search_registered_models()
@@ -197,7 +197,7 @@ def generate_model_report(**context):
 
 def monitor_model_performance(**context):
     """Production 모델 성능 모니터링"""
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
     client = MlflowClient()
     
     models = client.search_registered_models()

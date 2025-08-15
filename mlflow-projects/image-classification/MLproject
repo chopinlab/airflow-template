@@ -1,0 +1,19 @@
+name: image-classification
+
+conda_env: conda.yaml
+
+entry_points:
+  train:
+    parameters:
+      data_path: {type: string, default: "/data"}
+      epochs: {type: int, default: 10}
+      learning_rate: {type: float, default: 0.001}
+      batch_size: {type: int, default: 32}
+    command: "python train.py --data_path {data_path} --epochs {epochs} --learning_rate {learning_rate} --batch_size {batch_size}"
+  
+  inference:
+    parameters:
+      model_uri: {type: string}
+      data_path: {type: string, default: "/data/test"}
+      output_path: {type: string, default: "/data/inference_results.json"}
+    command: "python inference.py --model_uri {model_uri} --data_path {data_path} --output_path {output_path}"
