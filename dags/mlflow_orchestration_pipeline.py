@@ -221,7 +221,7 @@ manual_deployment_instructions = BashOperator(
         "echo '################################################################################' && "
         "echo '✅ Model training and validation complete.' && "
         "echo '👉 To deploy this model with BentoML, please run the following command in your shell:' && "
-        "echo '   docker-compose exec airflow bash -c "python /opt/airflow/scripts/deploy_with_bentoml.py"' && "
+        "echo '   docker-compose exec airflow bash -c \"python /opt/airflow/scripts/deploy_with_bentoml.py\"' && "
         "echo '################################################################################' && "
         "echo '\n'"
     ),
