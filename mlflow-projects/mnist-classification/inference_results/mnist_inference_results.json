@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-19T12:29:46.029611",
+  "timestamp": "2025-08-19T18:56:36.103128",
   "model_uri": "models:/MNIST-CNN/latest",
   "overall_accuracy": 95.34,
   "total_samples": 10000,
