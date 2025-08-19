@@ -93,10 +93,16 @@ The setup includes a complete MLOps pipeline with separated concerns:
 - **Artifact Store**: Local filesystem (`./artifacts`)
 
 **Architecture:**
-- **Airflow**: Orchestrates the ML pipeline workflow
+- **Airflow**: Orchestrates the ML pipeline workflow (트리거 역할만)
 - **MLflow Training Container**: Executes actual model training and inference
 - **MLflow Serving Container**: Serves models via REST API
 - **MLflow Server**: Manages experiments, runs, and model registry
+
+**CRITICAL: 환경 분리 원칙**
+- 훈련과 평가는 MLflow에서 실행 (Docker 컨테이너)
+- Airflow는 트리거 역할만 담당 (오케스트레이션)
+- ⚠️ **WARNING**: Airflow에 PyTorch 설치하면 즉시 제거할 것
+- 모든 ML 의존성은 mlflow-pytorch:latest 이미지에만 존재
 
 **Example Usage:**
 ```python

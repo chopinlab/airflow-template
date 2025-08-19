@@ -19,6 +19,10 @@ RUN pip install --no-cache-dir \
     fastapi \
     uvicorn
 
+# 사용자 생성 (UID 경고 해결)
+RUN groupadd -g 1000 mlflow && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash mlflow
+
 # 작업 디렉토리 설정
 WORKDIR /mlflow-projects/image-classification
 

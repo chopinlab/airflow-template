@@ -1,0 +1,23 @@
+name: mnist-classification
+
+conda_env: conda.yaml
+
+entry_points:
+  train:
+    parameters:
+      epochs: {type: int, default: 5}
+      batch_size: {type: int, default: 64}
+      lr: {type: float, default: 1.0}
+      gamma: {type: float, default: 0.7}
+      seed: {type: int, default: 42}
+      data_dir: {type: string, default: "./data"}
+      model_dir: {type: string, default: "./models"}
+    command: "python train.py --epochs {epochs} --batch-size {batch_size} --lr {lr} --gamma {gamma} --seed {seed} --data-dir {data_dir} --model-dir {model_dir}"
+  
+  inference:
+    parameters:
+      model_uri: {type: string}
+      data_dir: {type: string, default: "./data"}
+      output_dir: {type: string, default: "./inference_results"}
+      batch_size: {type: int, default: 1000}
+    command: "python inference.py --model-uri {model_uri} --data-dir {data_dir} --output-dir {output_dir} --batch-size {batch_size}"

@@ -1,0 +1,22 @@
+FROM apache/airflow:3.0.4-python3.12
+
+# Add a build argument for the Docker GID
+ARG DOCKER_GID=999
+
+# Switch to root to install packages and grant sudo
+USER root
+
+# Install Docker client and sudo
+RUN apt-get update && apt-get install -y docker.io sudo && rm -rf /var/lib/apt/lists/*
+
+# Create the docker group with the specified GID, or modify the existing one
+RUN if getent group docker; then groupmod -g ${DOCKER_GID} docker; else groupadd -g ${DOCKER_GID} docker; fi
+
+# Add airflow user to the docker group
+RUN usermod -aG docker airflow
+
+# Give airflow user passwordless sudo privileges
+RUN echo "airflow ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Switch back to the airflow user
+USER airflow

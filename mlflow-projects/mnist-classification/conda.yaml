@@ -1,0 +1,17 @@
+name: mnist-classification
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pytorch::pytorch=2.0.1
+  - pytorch::torchvision=0.15.2
+  - numpy
+  - matplotlib
+  - scikit-learn
+  - pip
+  - pip:
+    - mlflow>=2.8.0
+    - requests
+    - Pillow
