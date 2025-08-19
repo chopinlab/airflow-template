@@ -1,0 +1,693 @@
+{
+  "timestamp": "2025-08-19T12:29:46.029611",
+  "model_uri": "models:/MNIST-CNN/latest",
+  "overall_accuracy": 95.34,
+  "total_samples": 10000,
+  "correct_samples": 9534,
+  "class_metrics": {
+    "class_0": {
+      "precision": 0.9752321981424149,
+      "recall": 0.9642857142857143,
+      "f1_score": 0.9697280656747049,
+      "support": 980
+    },
+    "class_1": {
+      "precision": 0.9790209790209791,
+      "recall": 0.986784140969163,
+      "f1_score": 0.9828872312417727,
+      "support": 1135
+    },
+    "class_2": {
+      "precision": 0.9642147117296223,
+      "recall": 0.939922480620155,
+      "f1_score": 0.9519136408243376,
+      "support": 1032
+    },
+    "class_3": {
+      "precision": 0.9596367305751766,
+      "recall": 0.9415841584158415,
+      "f1_score": 0.9505247376311844,
+      "support": 1010
+    },
+    "class_4": {
+      "precision": 0.9673469387755103,
+      "recall": 0.9653767820773931,
+      "f1_score": 0.9663608562691132,
+      "support": 982
+    },
+    "class_5": {
+      "precision": 0.9441401971522454,
+      "recall": 0.9663677130044843,
+      "f1_score": 0.9551246537396122,
+      "support": 892
+    },
+    "class_6": {
+      "precision": 0.9225490196078432,
+      "recall": 0.9822546972860126,
+      "f1_score": 0.9514661274014156,
+      "support": 958
+    },
+    "class_7": {
+      "precision": 0.9411196911196911,
+      "recall": 0.9484435797665369,
+      "f1_score": 0.9447674418604651,
+      "support": 1028
+    },
+    "class_8": {
+      "precision": 0.955703211517165,
+      "recall": 0.8860369609856262,
+      "f1_score": 0.9195524773574854,
+      "support": 974
+    },
+    "class_9": {
+      "precision": 0.9238921001926782,
+      "recall": 0.9504459861248761,
+      "f1_score": 0.936980947728383,
+      "support": 1009
+    }
+  },
+  "confusion_matrix": [
+    [
+      945,
+      0,
+      3,
+      1,
+      0,
+      0,
+      26,
+      2,
+      3,
+      0
+    ],
+    [
+      0,
+      1120,
+      1,
+      4,
+      0,
+      0,
+      4,
+      0,
+      5,
+      1
+    ],
+    [
+      6,
+      4,
+      970,
+      10,
+      5,
+      0,
+      4,
+      19,
+      14,
+      0
+    ],
+    [
+      1,
+      0,
+      6,
+      951,
+      0,
+      23,
+      2,
+      17,
+      4,
+      6
+    ],
+    [
+      0,
+      0,
+      3,
+      0,
+      948,
+      0,
+      11,
+      2,
+      2,
+      16
+    ],
+    [
+      2,
+      1,
+      0,
+      4,
+      0,
+      862,
+      11,
+      2,
+      6,
+      4
+    ],
+    [
+      4,
+      3,
+      1,
+      0,
+      4,
+      5,
+      941,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      5,
+      17,
+      5,
+      2,
+      2,
+      0,
+      975,
+      2,
+      20
+    ],
+    [
+      7,
+      7,
+      5,
+      13,
+      7,
+      9,
+      19,
+      12,
+      863,
+      32
+    ],
+    [
+      4,
+      4,
+      0,
+      3,
+      14,
+      12,
+      2,
+      7,
+      4,
+      959
+    ]
+  ],
+  "sample_predictions": [
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9999620914459229
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.9732224345207214
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9952219128608704
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9924755692481995
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.994120180606842
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9950965046882629
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.994010329246521
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.8424339890480042
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.5080270171165466
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9698763489723206
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9911291599273682
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9971795082092285
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9977758526802063
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9879418015480042
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.998887836933136
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.944098711013794
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9940799474716187
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9999692440032959
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.6950053572654724
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9991188645362854
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9675150513648987
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9978463649749756
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9948176741600037
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.9980918765068054
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9917776584625244
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9985244870185852
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9959320425987244
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.999666690826416
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9971351623535156
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.98894202709198
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9957965612411499
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9672076106071472
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9977837204933167
+    },
+    {
+      "prediction": 6,
+      "label": 4,
+      "confidence": 0.591748833656311
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.999448835849762
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.9922459721565247
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9985431432723999
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9974141120910645
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.8879456520080566
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9942731261253357
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9811643362045288
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9976736903190613
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9952915906906128
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.9383110404014587
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9234044551849365
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.9846448302268982
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.7796124219894409
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.9993384480476379
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9861288070678711
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.997925877571106
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9997542500495911
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9958788156509399
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.9930660724639893
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.9441598057746887
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9993311166763306
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9741535782814026
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9999494552612305
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9896899461746216
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9962755441665649
+    },
+    {
+      "prediction": 5,
+      "label": 5,
+      "confidence": 0.937881350517273
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9997984766960144
+    },
+    {
+      "prediction": 8,
+      "label": 8,
+      "confidence": 0.9813482761383057
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9533177614212036
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9203906655311584
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9988412261009216
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9588512182235718
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9776076674461365
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9982385635375977
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.998927652835846
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9901624917984009
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9999797344207764
+    },
+    {
+      "prediction": 0,
+      "label": 0,
+      "confidence": 0.9991047978401184
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.7843608856201172
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.8559728264808655
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9927400946617126
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9999123811721802
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9931162595748901
+    },
+    {
+      "prediction": 7,
+      "label": 2,
+      "confidence": 0.828895628452301
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9706144332885742
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9992954730987549
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.8238299489021301
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9994527697563171
+    },
+    {
+      "prediction": 2,
+      "label": 2,
+      "confidence": 0.9999707937240601
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9967504739761353
+    },
+    {
+      "prediction": 8,
+      "label": 8,
+      "confidence": 0.8752027153968811
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9995661377906799
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9999127388000488
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9434975981712341
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9997840523719788
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9976230263710022
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9970139265060425
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.9999346733093262
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.5765247344970703
+    },
+    {
+      "prediction": 3,
+      "label": 3,
+      "confidence": 0.9869824647903442
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.9748938679695129
+    },
+    {
+      "prediction": 4,
+      "label": 4,
+      "confidence": 0.9218133687973022
+    },
+    {
+      "prediction": 1,
+      "label": 1,
+      "confidence": 0.6237930059432983
+    },
+    {
+      "prediction": 7,
+      "label": 7,
+      "confidence": 0.9892786145210266
+    },
+    {
+      "prediction": 6,
+      "label": 6,
+      "confidence": 0.997925877571106
+    },
+    {
+      "prediction": 9,
+      "label": 9,
+      "confidence": 0.9984850287437439
+    }
+  ]
+}

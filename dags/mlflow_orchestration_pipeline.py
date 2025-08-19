@@ -6,8 +6,6 @@ from airflow.datasets import Dataset
 import os
 import json
 import mlflow
-import subprocess
-import requests
 
 # Dataset 정의
 training_data_dataset = Dataset("file:///data/train/")
@@ -36,61 +34,91 @@ dag = DAG(
 def generate_sample_data(**context):
     """샘플 데이터 생성"""
     print("🎨 Generating sample images...")
-    result = subprocess.run([
-        'python', '/opt/airflow/data/generate_sample_data.py'
-    ], capture_output=True, text=True, cwd='/opt/airflow')
     
-    if result.returncode == 0:
+    try:
+        # Python 모듈로 직접 import해서 실행
+        import sys
+        sys.path.append('/opt/airflow/data')
+        
+        # generate_sample_data 모듈 실행
+        import generate_sample_data
+        
+        # 모듈에 main 함수가 있다면 실행, 없다면 스크립트 자체가 실행됨
+        if hasattr(generate_sample_data, 'main'):
+            generate_sample_data.main()
+        
         print("✅ Sample data generated successfully")
-    else:
-        raise Exception(f"Data generation failed: {result.stderr}")
+        
+    except ImportError as e:
+        print(f"⚠️ Could not import data generation script: {e}")
+        # 폴백: 간단한 데이터 디렉토리 확인
+        data_dir = '/opt/airflow/data/train/images'
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir, exist_ok=True)
+        print("✅ Data directories ensured to exist")
+        
+    except Exception as e:
+        raise Exception(f"Data generation failed: {str(e)}")
 
 def trigger_mlflow_training(**context):
-    """MLflow 훈련 작업 트리거"""
-    print("🚀 Triggering MLflow training...")
+    """MLflow Projects를 통한 훈련 작업 실행"""
+    print("🚀 Running MLflow Project for image classification training...")
     
     # MLflow 설정
     mlflow.set_tracking_uri("http://mlflow-server:5000")
     
-    # MLflow Training 서비스가 준비될 때까지 대기
-    import time
-    
-    max_retries = 30  # 최대 15분 대기
-    for attempt in range(max_retries):
-        try:
-            health_response = requests.get("http://mlflow-training:8000/health", timeout=10)
-            if health_response.status_code == 200:
-                print("✅ MLflow Training service is ready!")
-                break
-        except requests.exceptions.ConnectionError:
-            pass
-        
-        print(f"⏳ Waiting for MLflow Training service... (attempt {attempt + 1}/{max_retries})")
-        time.sleep(30)  # 30초 대기
-    else:
-        raise Exception("MLflow Training service did not start within 15 minutes")
-    
     try:
-        training_request = {"data_path": "/data", "epochs": 10, "learning_rate": 0.001, "batch_size": 4}
-        response = requests.post("http://mlflow-training:8000/train", json=training_request, timeout=1800)
+        # MLflow Projects 실행 - 이미지 분류 훈련
+        print("📊 Starting MLflow Project execution...")
         
-        if response.status_code == 200:
-            result_data = response.json()
-            print(f"✅ MLflow training completed successfully: {result_data}")
-            
-            # XCom에 결과 저장
-            context['ti'].xcom_push(key='training_status', value='success')
-            context['ti'].xcom_push(key='run_id', value=result_data.get('run_id'))
-            
-            return result_data
-        else:
-            raise Exception(f"Training failed: {response.json().get('detail', 'Unknown error')}")
-    except requests.exceptions.Timeout:
-        raise Exception("Training timed out after 30 minutes")
-    except requests.exceptions.ConnectionError:
-        raise Exception("Could not connect to MLflow training service")
+        submitted_run = mlflow.run(
+            uri="/opt/airflow/mlflow-projects/image-classification",
+            entry_point="train",
+            parameters={
+                "data_path": "/data",
+                "epochs": 10,
+                "learning_rate": 0.001,
+                "batch_size": 4
+            },
+            experiment_name="image-classification",
+            synchronous=True,  # 동기 실행으로 완료까지 대기
+            backend="docker",
+            backend_config={
+                "image": "mlflow-pytorch:latest",
+                "volumes": {
+                    "/opt/airflow/mlflow-projects": "/mlflow-projects",
+                    "/opt/airflow/data": "/data"
+                }
+            }
+        )
+        
+        run_id = submitted_run.run_id
+        print(f"✅ MLflow Project training completed successfully!")
+        print(f"🏃 Run ID: {run_id}")
+        
+        # 실행 결과 조회
+        client = mlflow.tracking.MlflowClient()
+        run_info = client.get_run(run_id)
+        
+        # 메트릭 조회
+        final_accuracy = run_info.data.metrics.get('accuracy', 0)
+        print(f"📊 Final accuracy: {final_accuracy:.4f}")
+        
+        # XCom에 결과 저장
+        context['ti'].xcom_push(key='training_status', value='success')
+        context['ti'].xcom_push(key='run_id', value=run_id)
+        context['ti'].xcom_push(key='accuracy', value=final_accuracy)
+        
+        return {
+            'status': 'success',
+            'run_id': run_id,
+            'accuracy': final_accuracy
+        }
+        
     except Exception as e:
-        raise Exception(f"Training execution error: {str(e)}")
+        print(f"❌ MLflow Project execution failed: {str(e)}")
+        context['ti'].xcom_push(key='training_status', value='failed')
+        raise Exception(f"MLflow Project training failed: {str(e)}")
 
 def get_latest_model_info(**context):
     """최신 모델 정보 조회"""
@@ -133,34 +161,72 @@ def get_latest_model_info(**context):
         raise Exception(f"Failed to get model info: {str(e)}")
 
 def trigger_mlflow_inference(**context):
-    """MLflow 추론 작업 트리거"""
-    print("🔮 Triggering MLflow inference...")
+    """MLflow Projects를 통한 추론 작업 실행"""
+    print("🔮 Running MLflow Project for image classification inference...")
     
     model_info = context['ti'].xcom_pull(task_ids='get_model_info', key='model_info')
     
     if not model_info:
         raise Exception("Model information not available")
     
+    # MLflow 설정
+    mlflow.set_tracking_uri("http://mlflow-server:5000")
+    
     try:
-        response = requests.post(
-            "http://mlflow-training:8000/inference",
-            params={"model_uri": model_info['model_uri'], "data_path": "/data/test/images"},
-            timeout=600
+        print(f"🎯 Using model: {model_info['model_uri']}")
+        
+        # MLflow Projects 실행 - 이미지 분류 추론
+        submitted_run = mlflow.run(
+            uri="/opt/airflow/mlflow-projects/image-classification",
+            entry_point="inference",
+            parameters={
+                "model_uri": model_info['model_uri'],
+                "data_path": "/data/test",
+                "output_path": "/data/inference_results.json"
+            },
+            experiment_name="image-classification-inference",
+            synchronous=True,
+            backend="docker",
+            backend_config={
+                "image": "mlflow-pytorch:latest",
+                "volumes": {
+                    "/opt/airflow/mlflow-projects": "/mlflow-projects",
+                    "/opt/airflow/data": "/data"
+                }
+            }
         )
         
-        if response.status_code == 200:
-            result_data = response.json()
-            print(f"✅ MLflow inference completed successfully: {result_data}")
-            summary = result_data.get('results', {})
+        run_id = submitted_run.run_id
+        print(f"✅ MLflow Project inference completed successfully!")
+        print(f"🏃 Inference Run ID: {run_id}")
+        
+        # 추론 결과 파일 읽기
+        try:
+            import json
+            with open('/opt/airflow/data/inference_results.json', 'r') as f:
+                inference_results = json.load(f)
+            
+            summary = {
+                'total_samples': inference_results.get('total_samples', 0),
+                'accuracy': inference_results.get('accuracy', 0),
+                'run_id': run_id
+            }
+            
+            print(f"📊 Inference summary: {summary}")
             context['ti'].xcom_push(key='inference_summary', value=summary)
-        else:
-            raise Exception(f"Inference failed: {response.json().get('detail', 'Unknown error')}")
-    except requests.exceptions.Timeout:
-        raise Exception("Inference timed out after 10 minutes")
-    except requests.exceptions.ConnectionError:
-        raise Exception("Could not connect to MLflow inference service")
+            
+            return summary
+            
+        except Exception as e:
+            print(f"⚠️ Could not read inference results file: {e}")
+            # 기본 결과 반환
+            summary = {'run_id': run_id, 'status': 'completed'}
+            context['ti'].xcom_push(key='inference_summary', value=summary)
+            return summary
+        
     except Exception as e:
-        raise Exception(f"Inference execution error: {str(e)}")
+        print(f"❌ MLflow Project inference failed: {str(e)}")
+        raise Exception(f"MLflow Project inference failed: {str(e)}")
 
 def validate_pipeline(**context):
     """파이프라인 결과 검증 (배포 제외)"""

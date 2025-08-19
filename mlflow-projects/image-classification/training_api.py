@@ -4,6 +4,7 @@ import subprocess
 import json
 import asyncio
 import os
+from typing import List
 
 app = FastAPI(title="MLflow Training API", version="1.0.0")
 
@@ -12,6 +13,10 @@ class TrainingRequest(BaseModel):
     epochs: int = 10
     learning_rate: float = 0.001
     batch_size: int = 4
+
+class ScriptRequest(BaseModel):
+    script_path: str
+    args: List[str] = []
 
 @app.get("/health")
 async def health_check():
@@ -112,6 +117,51 @@ async def trigger_inference(model_uri: str, data_path: str = "/data/test/images"
         raise HTTPException(
             status_code=500,
             detail=f"Inference execution error: {str(e)}"
+        )
+
+@app.post("/run_script")
+async def run_script(request: ScriptRequest):
+    """범용 Python 스크립트 실행"""
+    try:
+        print(f"🏃 Running script: {request.script_path} with args: {request.args}")
+        
+        # 스크립트 경로 유효성 검증
+        if not os.path.exists(request.script_path):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Script not found: {request.script_path}"
+            )
+        
+        # 스크립트 실행
+        cmd = ['python', request.script_path] + request.args
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+        
+        if result.returncode == 0:
+            return {
+                "status": "success",
+                "message": "Script executed successfully",
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "return_code": result.returncode
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Script execution failed",
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "return_code": result.returncode
+            }
+            
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=408,
+            detail="Script execution timed out after 30 minutes"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Script execution error: {str(e)}"
         )
 
 if __name__ == "__main__":
